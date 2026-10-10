@@ -1,0 +1,65 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "chitose.moc3",
+		"Textures": [
+			"chitose.2048/texture_00.png"
+		],
+		"Physics": "chitose.physics3.json",
+		"Pose": "chitose.pose3.json",
+		"DisplayInfo": "chitose.cdi3.json",
+		"Expressions": [
+			{ "Name": "happy", "File": "expressions/Smile.exp3.json" },
+			{ "Name": "smile", "File": "expressions/Smile.exp3.json" },
+			{ "Name": "love", "File": "expressions/Blushing.exp3.json" },
+			{ "Name": "blush", "File": "expressions/Blushing.exp3.json" },
+			{ "Name": "shy", "File": "expressions/Blushing.exp3.json" },
+			{ "Name": "angry", "File": "expressions/Angry.exp3.json" },
+			{ "Name": "pout", "File": "expressions/Angry.exp3.json" },
+			{ "Name": "sad", "File": "expressions/Sad.exp3.json" },
+			{ "Name": "surprised", "File": "expressions/Surprised.exp3.json" },
+			{ "Name": "wink", "File": "expressions/f01.exp3.json" },
+			{ "Name": "thinking", "File": "expressions/Normal.exp3.json" },
+			{ "Name": "neutral", "File": "expressions/Normal.exp3.json" },
+			{ "Name": "normal", "File": "expressions/Normal.exp3.json" }
+		],
+		"Motions": {
+			"Flick": [
+				{
+					"File": "motion/chitose_handwave.motion3.json"
+				}
+			],
+			"Idle": [
+				{
+					"File": "motion/chitose_idle.motion3.json"
+				}
+			],
+			"Tap": [
+				{
+					"File": "motion/chitose_kime01.motion3.json"
+				},
+				{
+					"File": "motion/chitose_kime02.motion3.json"
+				}
+			]
+		}
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": [
+				"PARAM_MOUTH_OPEN_Y"
+			]
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"PARAM_EYE_L_OPEN",
+				"PARAM_EYE_R_OPEN"
+			]
+		}
+	],
+	"HitAreas": []
+}

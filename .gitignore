@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output (built via GitHub Actions for GitHub Pages)
+dist/
+dist-ssr/
+
+# Local env files
+.env
+.env.local
+*.local
+
+# Temporary download / extraction folders & archives
+*.zip
+chitose_extracted/
+hiyori_extracted/
+
+# Root duplicated library files (canonical versions are in public/lib/)
+/cubism4.min.js
+/live2dcubismcore.min.js
+/pixi.min.js
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
