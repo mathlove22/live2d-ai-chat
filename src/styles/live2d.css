@@ -229,12 +229,12 @@
 
 .btn-touch-action {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-glass);
+  background: #141f17 !important;
+  border: 1.5px solid rgba(74, 222, 128, 0.3) !important;
   border-radius: 10px;
-  color: var(--text-primary);
+  color: #f1f5f9 !important;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 8px 4px;
   cursor: pointer;
   display: flex;
@@ -246,11 +246,11 @@
 }
 
 .btn-touch-action:hover {
-  background: rgba(255, 117, 140, 0.2);
-  border-color: rgba(255, 117, 140, 0.4);
-  color: #fff;
+  background: #1e3323 !important;
+  border-color: #4ade80 !important;
+  color: #ffffff !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 117, 140, 0.2);
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.25);
 }
 
 .btn-touch-action:active {
@@ -260,8 +260,8 @@
 /* Stage Bottom Widgets */
 .live2d-stage-footer {
   padding: 14px 18px;
-  border-top: 1px solid var(--border-glass);
-  background: rgba(255, 255, 255, 0.02);
+  border-top: 1.5px solid rgba(74, 222, 128, 0.25) !important;
+  background: #0d140f !important;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -274,10 +274,10 @@
 
 .btn-stage-action {
   flex: 1;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-glass);
+  background: #141f17 !important;
+  border: 1.5px solid rgba(74, 222, 128, 0.3) !important;
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: #f1f5f9 !important;
   font-size: 12px;
   font-weight: 600;
   padding: 9px 8px;
@@ -290,15 +290,16 @@
 }
 
 .btn-stage-action:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text-primary);
+  background: #1e3323 !important;
+  border-color: #4ade80 !important;
+  color: #ffffff !important;
 }
 
 .btn-stage-action.highlight {
-  background: var(--accent-gradient);
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 4px 14px rgba(255, 117, 140, 0.35);
+  background: var(--accent-gradient) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(74, 222, 128, 0.35);
 }
 
 .btn-stage-action.highlight:hover {
@@ -402,4 +403,16 @@
   body[data-mobile-view='split'] .live2d-action-bubble {
     display: none;
   }
+}
+
+/* Disabled interaction states during active AI dialogue response */
+.btn-touch-action.disabled-during-chat,
+.btn-stage-action.disabled-during-chat,
+.quick-reply-chip.disabled-during-chat,
+.btn-input-tool.disabled-during-chat {
+  opacity: 0.45 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.25);
+  transition: opacity 0.25s ease;
 }

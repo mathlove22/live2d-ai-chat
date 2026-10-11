@@ -1,5 +1,5 @@
 /**
- * Live2D Controller supporting multiple characters (Momose Hiyori & Chitose)
+ * Live2D Controller supporting Zundamon, Momose Hiyori & Chitose
  * Utilizes PixiJS v6 + pixi-live2d-display (Cubism 4 runtime)
  */
 
@@ -11,16 +11,17 @@ export class Live2DManager {
     
     this.app = null;
     this.model = null;
-    this.activeCharId = 'hiyori';
+    this.activeCharId = 'zundamon';
     this.isLoaded = false;
     this.isSpeaking = false;
     this.lipSyncValue = 0;
-    this.currentEmotion = 'neutral';
+    this.currentEmotion = 'happy';
     this.currentMotion = 'Idle';
 
     // Parameter target values for smooth manual blending
     this.paramOverrides = {
       ParamCheek: 0,
+      ParamcheekPuff: 0,
       ParamEyeLSmile: 0,
       ParamEyeRSmile: 0,
       ParamMouthForm: 0.1
@@ -28,6 +29,18 @@ export class Live2DManager {
 
     // Emotion definitions mapping per character
     this.charEmotionConfigs = {
+      zundamon: {
+        happy: { expression: 'happy', motion: 'Happy', motionIndex: 0, badge: '🌱 신난다!', cheek: 0.5, description: '방방 뛰며 방긋 웃는다' },
+        love: { expression: 'love', motion: 'Tap', motionIndex: 1, badge: '💚 단짝 최고!', cheek: 0.85, description: '눈을 반짝이며 양손을 흔든다' },
+        shy: { expression: 'shy', motion: 'Shy', motionIndex: 0, badge: '😳 에헤헤...', cheek: 0.8, description: '볼을 붉히며 수줍게 웃는다' },
+        surprised: { expression: 'surprised', motion: 'Surprise', motionIndex: 0, badge: '😮 우와 대박!', cheek: 0.2, description: '눈을 동그랗게 뜨고 깜짝 놀란다' },
+        pout: { expression: 'pout', motion: 'Pout', motionIndex: 0, badge: '😤 뾰로통', cheek: 0.4, description: '볼을 빵빵하게 부풀리고 뾰로통해한다' },
+        sad: { expression: 'sad', motion: 'Sad', motionIndex: 0, badge: '🥺 시무룩...', cheek: 0.1, description: '귀를 축 늘어뜨리고 시무룩해한다' },
+        thinking: { expression: 'thinking', motion: 'Think', motionIndex: 0, badge: '🤔 으음~ 고민중', cheek: 0.1, description: '머리에 손을 얹고 곰곰이 생각한다' },
+        wink: { expression: 'wink', motion: 'Happy', motionIndex: 1, badge: '😉 장난꾸러기', cheek: 0.5, description: '한쪽 눈을 찡긋 감으며 메롱한다' },
+        english: { expression: 'english', motion: 'Point', motionIndex: 0, badge: '🔤 영어 척척박사!', cheek: 0.4, description: '손가락으로 콕 짚으며 신나게 영어를 가르쳐준다' },
+        neutral: { expression: 'neutral', motion: 'Idle', motionIndex: 0, badge: '🌱 안녕 친구야!', cheek: 0.2, description: '다정하게 바라보며 귀를 쫑긋거린다' }
+      },
       hiyori: {
         happy: { expression: 'happy', motion: 'Tap', motionIndex: 1, badge: '😊 행복함', cheek: 0.6, description: '활짝 웃으며 고개를 끄덕인다' },
         love: { expression: 'love', motion: 'Tap@Body', motionIndex: 0, badge: '🥰 설렘가득', cheek: 0.95, description: '가슴에 손을 얹고 다정한 눈빛으로 바라본다' },
@@ -37,6 +50,7 @@ export class Live2DManager {
         sad: { expression: 'sad', motion: 'FlickDown', motionIndex: 0, badge: '😢 시무룩', cheek: 0.1, description: '풀이 죽어 시무룩한 표정을 짓는다' },
         thinking: { expression: 'thinking', motion: 'Idle', motionIndex: 2, badge: '🤔 고민중', cheek: 0.2, description: '고개를 갸우뚱하며 골똘히 생각에 잠긴다' },
         wink: { expression: 'wink', motion: 'FlickUp', motionIndex: 0, badge: '😉 장난/윙크', cheek: 0.7, description: '장난기 가득한 미소로 윙크를 보낸다' },
+        english: { expression: 'happy', motion: 'Tap', motionIndex: 0, badge: '🔤 영어시간', cheek: 0.4, description: '신나게 영어를 알려준다' },
         neutral: { expression: 'neutral', motion: 'Idle', motionIndex: 0, badge: '🌸 편안함', cheek: 0.0, description: '다정하고 편안한 미소로 바라본다' }
       },
       chitose: {
@@ -48,12 +62,13 @@ export class Live2DManager {
         sad: { expression: 'sad', motion: 'Idle', motionIndex: 0, badge: '🥺 속상함', cheek: 0.1, description: '안타까운 표정으로 시선을 내린다' },
         thinking: { expression: 'thinking', motion: 'Idle', motionIndex: 0, badge: '🤔 생각중', cheek: 0.0, description: '팔짱을 끼고 차분히 고민한다' },
         wink: { expression: 'wink', motion: 'Tap', motionIndex: 0, badge: '😉 장난기', cheek: 0.5, description: '자신감 넘치는 눈빛으로 싱긋 웃는다' },
+        english: { expression: 'happy', motion: 'Tap', motionIndex: 0, badge: '🔤 영어시간', cheek: 0.2, description: '차분하게 영어를 알려준다' },
         neutral: { expression: 'neutral', motion: 'Idle', motionIndex: 0, badge: '📘 차분함', cheek: 0.0, description: '든든하고 다정한 눈빛으로 쳐다본다' }
       }
     };
   }
 
-  async init(initialChar = 'hiyori') {
+  async init(initialChar = 'zundamon') {
     if (!this.canvas) {
       console.error('Live2D Canvas not found');
       return;
@@ -89,7 +104,7 @@ export class Live2DManager {
     }
   }
 
-  async loadModel(charId = 'hiyori') {
+  async loadModel(charId = 'zundamon') {
     this.isLoaded = false;
     this.activeCharId = charId;
 
@@ -99,7 +114,9 @@ export class Live2DManager {
       this.model = null;
     }
 
-    const modelPath = charId === 'chitose'
+    const modelPath = charId === 'zundamon'
+      ? './live2d/zundamon/zundamon.model3.json'
+      : charId === 'chitose'
       ? './live2d/chitose/chitose.model3.json'
       : './live2d/hiyori/hiyori_pro_t11.model3.json';
 
@@ -151,16 +168,17 @@ export class Live2DManager {
     const rawWidth = this.model.width || 800;
     const rawHeight = this.model.height || 1000;
 
+    const isZundamon = this.activeCharId === 'zundamon';
     const isChitose = this.activeCharId === 'chitose';
-    const heightFactor = isChitose ? 1.4 : 1.35;
+    const heightFactor = isZundamon ? 1.25 : (isChitose ? 1.4 : 1.35);
     const scaleY = (screenH * heightFactor) / rawHeight;
-    const scaleX = (screenW * 1.1) / rawWidth;
+    const scaleX = (screenW * 1.05) / rawWidth;
     const finalScale = Math.min(scaleY, Math.max(scaleX, 0.22));
 
     this.model.scale.set(finalScale);
 
     this.model.x = screenW / 2;
-    this.model.y = screenH * (isChitose ? 0.68 : 0.65);
+    this.model.y = screenH * (isZundamon ? 0.62 : (isChitose ? 0.68 : 0.65));
   }
 
   onResize() {
@@ -183,12 +201,12 @@ export class Live2DManager {
       const normalizedY = localPos.y / (this.model.height || 800);
 
       let touchArea = 'body';
-      if (normalizedY < -0.2) {
+      if (normalizedY < -0.15) {
         touchArea = 'head';
-      } else if (normalizedY >= -0.2 && normalizedY < 0.05) {
+      } else if (normalizedY >= -0.15 && normalizedY < 0.1) {
         touchArea = 'cheek';
       } else {
-        touchArea = 'chest';
+        touchArea = 'body';
       }
 
       this.handleTouchInteraction(touchArea);
@@ -196,11 +214,20 @@ export class Live2DManager {
   }
 
   handleTouchInteraction(area) {
+    if (this.isSpeaking) return;
+    const isZundamon = this.activeCharId === 'zundamon';
     const isChitose = this.activeCharId === 'chitose';
 
     if (area === 'head') {
       this.setEmotion('happy');
-      if (isChitose) {
+      if (isZundamon) {
+        this.playMotion('Happy', 0);
+        this.onHit({
+          area: 'head',
+          emotion: 'happy',
+          text: '머리 쓰다듬어주니까 간질간질하고 너무 좋아! 헤헤, 고마워 친구야! 🌱'
+        });
+      } else if (isChitose) {
         this.playMotion('Tap', 0);
         this.onHit({
           area: 'head',
@@ -219,7 +246,14 @@ export class Live2DManager {
       const isShy = Math.random() > 0.4;
       if (isShy) {
         this.setEmotion('shy');
-        if (isChitose) {
+        if (isZundamon) {
+          this.playMotion('Shy', 0);
+          this.onHit({
+            area: 'cheek',
+            emotion: 'shy',
+            text: '볼 만지지 마아~ 볼 빨개진단 말이야! 에헤헤, 간지러워라! 😆'
+          });
+        } else if (isChitose) {
           this.playMotion('Idle', 0);
           this.onHit({
             area: 'cheek',
@@ -236,7 +270,14 @@ export class Live2DManager {
         }
       } else {
         this.setEmotion('pout');
-        if (isChitose) {
+        if (isZundamon) {
+          this.playMotion('Pout', 0);
+          this.onHit({
+            area: 'cheek',
+            emotion: 'pout',
+            text: '볼 꼬집지 마아~ 말랑말랑 찹쌀떡 아니란 말이야! 볼 빵빵 부풀릴 거야! 🥺'
+          });
+        } else if (isChitose) {
           this.playMotion('Idle', 0);
           this.onHit({
             area: 'cheek',
@@ -256,7 +297,14 @@ export class Live2DManager {
       const isLove = Math.random() > 0.5;
       if (isLove) {
         this.setEmotion('love');
-        if (isChitose) {
+        if (isZundamon) {
+          this.playMotion('Tap', 0);
+          this.onHit({
+            area: 'body',
+            emotion: 'love',
+            text: '우리 손 꼭 잡고 놀이터 갈까? 넌 세상에서 제일 좋은 내 단짝 친구야! 💚'
+          });
+        } else if (isChitose) {
           this.playMotion('Tap', 1);
           this.onHit({
             area: 'body',
@@ -268,12 +316,20 @@ export class Live2DManager {
           this.onHit({
             area: 'body',
             emotion: 'love',
-            text: '자기야 손 따뜻하다... 심장이 쿵쾅거려 🥰'
+            text: '손 따뜻하다... 심장이 쿵쾅거려 🥰'
           });
         }
       } else {
-        this.setEmotion('surprised');
-        if (isChitose) {
+        if (isZundamon) {
+          this.setEmotion('english');
+          this.playMotion('Point', 0);
+          this.onHit({
+            area: 'body',
+            emotion: 'english',
+            text: '친구는 영어로 Friend(프렌드)! 너랑 나는 최고의 베스트 프렌드(Best Friend)야! 🔤'
+          });
+        } else if (isChitose) {
+          this.setEmotion('surprised');
           this.playMotion('Flick', 0);
           this.onHit({
             area: 'body',
@@ -281,6 +337,7 @@ export class Live2DManager {
             text: '깜짝이야! 너 은근히 대담하네...?'
           });
         } else {
+          this.setEmotion('surprised');
           this.playMotion('Flick', 0);
           this.onHit({
             area: 'body',
@@ -301,7 +358,7 @@ export class Live2DManager {
       const coreModel = this.model.internalModel.coreModel;
       if (!coreModel) return;
 
-      // Real-time Audio Driven Lip-Sync or fallback oscillation (Supports both Cubism 2/3 naming)
+      // Real-time Audio Driven Lip-Sync or fallback oscillation
       if (this.lipSyncValue > 0) {
         try { coreModel.setParameterValueById('ParamMouthOpenY', this.lipSyncValue); } catch (_) {}
         try { coreModel.setParameterValueById('PARAM_MOUTH_OPEN_Y', this.lipSyncValue); } catch (_) {}
@@ -310,9 +367,12 @@ export class Live2DManager {
         const mouthOpen = (Math.sin(time) * 0.5 + 0.5) * (0.35 + Math.random() * 0.55);
         try { coreModel.setParameterValueById('ParamMouthOpenY', mouthOpen); } catch (_) {}
         try { coreModel.setParameterValueById('PARAM_MOUTH_OPEN_Y', mouthOpen); } catch (_) {}
+      } else {
+        // Keep mouth gently closed when not speaking
+        try { coreModel.setParameterValueById('ParamMouthOpenY', 0); } catch (_) {}
       }
 
-      // Smooth cheek blush override (Supports both ParamCheek and PARAM_CHEEK)
+      // Smooth cheek blush override
       if (this.paramOverrides.ParamCheek > 0) {
         try {
           const currentCheek = coreModel.getParameterValueById('ParamCheek') || coreModel.getParameterValueById('PARAM_CHEEK') || 0;
@@ -321,6 +381,13 @@ export class Live2DManager {
           try { coreModel.setParameterValueById('ParamCheek', lerped); } catch (_) {}
           try { coreModel.setParameterValueById('PARAM_CHEEK', lerped); } catch (_) {}
         } catch (_) {}
+      }
+
+      // Zundamon specific subtle breathing / ear perking animation
+      if (this.activeCharId === 'zundamon') {
+        const t = Date.now() / 650;
+        const earBob = Math.sin(t) * 0.15;
+        try { coreModel.setParameterValueById('ParamEdamame', earBob); } catch (_) {}
       }
     });
   }
@@ -332,7 +399,7 @@ export class Live2DManager {
     if (!this.isLoaded || !this.model) return;
 
     const normalized = (emotionKey || 'neutral').toLowerCase();
-    const charMap = this.charEmotionConfigs[this.activeCharId] || this.charEmotionConfigs.hiyori;
+    const charMap = this.charEmotionConfigs[this.activeCharId] || this.charEmotionConfigs.zundamon;
     const config = charMap[normalized] || charMap.neutral;
     this.currentEmotion = normalized;
 
@@ -397,12 +464,14 @@ export class Live2DManager {
     const screenW = this.app.screen.width;
     const screenH = this.app.screen.height;
     const rawHeight = this.model.height || 1000;
-    const heightFactor = this.activeCharId === 'chitose' ? 1.4 : 1.35;
+    const isZundamon = this.activeCharId === 'zundamon';
+    const isChitose = this.activeCharId === 'chitose';
+    const heightFactor = isZundamon ? 1.25 : (isChitose ? 1.4 : 1.35);
     const baseScale = (screenH * heightFactor) / rawHeight;
 
     if (mode === 'closeup') {
       this.model.scale.set(baseScale * 1.45);
-      this.model.y = screenH * 0.82;
+      this.model.y = screenH * (isZundamon ? 0.76 : 0.82);
     } else {
       this.setupModelPosition();
     }

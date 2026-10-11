@@ -1,16 +1,63 @@
-import { CHARACTERS, EMOTIONS, QUICK_REPLIES, getSimulatedReply } from './data/characters.js';
+import { CHARACTERS, EMOTIONS, QUICK_REPLIES } from './data/characters.js';
 import { GIFTS, getIntimacyLevel } from './data/gifts.js';
-import { storage, DEFAULT_MODEL, DEFAULT_TTS_ENGINE, DEFAULT_TTS_VOICE } from './services/storage.js';
+import { storage, DEFAULT_API_KEY, DEFAULT_MODEL, DEFAULT_TTS_ENGINE, DEFAULT_TTS_VOICE } from './services/storage.js';
 import { callGeminiStream, testConnection, parseEmotionAndText } from './services/gemini.js';
 import { soundController } from './services/audio.js';
 import { ParticleManager } from './components/particle.js';
 import { Live2DManager } from './components/live2d.js';
 
+export const OPENROUTER_SPEECH_MODELS = [
+  {
+    id: 'google/gemini-3.8-flash-lite-tts',
+    name: '⚡ Google: Gemini 3.8 Flash Lite TTS (초고속 추천)',
+    voices: [
+      { id: 'Leda', name: 'Leda (👧 어리고 부드러운 목소리 - 기본 추천)' },
+      { id: 'Zephyr', name: 'Zephyr (밝고 산뜻한 목소리)' },
+      { id: 'Aoede', name: 'Aoede (자연스럽고 부드러운 목소리)' },
+      { id: 'Puck', name: 'Puck (장난꾸러기 귀여운 목소리)' },
+      { id: 'Kore', name: 'Kore (차분하고 다정한 목소리)' },
+      { id: 'Fenrir', name: 'Fenrir (듬직하고 씩씩한 목소리)' }
+    ]
+  },
+  {
+    id: 'google/gemini-3.8-flash-tts',
+    name: '✨ Google: Gemini 3.8 Flash TTS (고품질 표현력)',
+    voices: [
+      { id: 'Leda', name: 'Leda (👧 어리고 부드러운 목소리 - 기본 추천)' },
+      { id: 'Zephyr', name: 'Zephyr (밝고 산뜻한 목소리)' },
+      { id: 'Aoede', name: 'Aoede (자연스럽고 부드러운 목소리)' },
+      { id: 'Puck', name: 'Puck (장난꾸러기 귀여운 목소리)' },
+      { id: 'Kore', name: 'Kore (차분하고 다정한 목소리)' },
+      { id: 'Fenrir', name: 'Fenrir (듬직하고 씩씩한 목소리)' }
+    ]
+  },
+  {
+    id: 'elevenlabs/eleven-v4-turbo',
+    name: '🎙️ ElevenLabs: Eleven v4 Turbo (저지연 터보)',
+    voices: [
+      { id: 'lily', name: 'Lily (👧 귀여운 어린이/소녀 목소리 - 추천)' },
+      { id: 'sarah', name: 'Sarah (부드러운 목소리)' },
+      { id: 'bella', name: 'Bella (밝고 사랑스러운 목소리)' },
+      { id: 'laura', name: 'Laura (친절하고 따뜻한 목소리)' },
+      { id: 'alice', name: 'Alice (명랑하고 맑은 목소리)' },
+      { id: 'matilda', name: 'Matilda (차분한 목소리)' },
+      { id: 'charlie', name: 'Charlie (장난꾸러기 목소리)' }
+    ]
+  },
+  {
+    id: 'none',
+    name: '사용 안 함 (Gemini 직통 연결 사용)',
+    voices: [
+      { id: '', name: '(해당 없음)' }
+    ]
+  }
+];
+
 class SweetheartApp {
   constructor() {
     this.characters = CHARACTERS;
     this.gifts = GIFTS;
-    this.activeChar = this.characters[0]; // Momose Hiyori
+    this.activeChar = this.characters[0]; // Zundamon
     this.messages = [];
     this.isStreaming = false;
     this.particleManager = null;
@@ -74,16 +121,15 @@ class SweetheartApp {
     this.btnHeaderChars = document.getElementById('btn-header-chars');
     this.btnHeaderProfile = document.getElementById('btn-header-profile');
 
-    // API settings elements
-    this.inputApiKey = document.getElementById('input-api-key');
+    // API settings elements (OpenRouter)
+    this.inputOpenRouterKey = document.getElementById('input-openrouter-key');
+    this.btnToggleOrKeyVisibility = document.getElementById('btn-toggle-or-key-visibility');
     this.selectGeminiModel = document.getElementById('select-gemini-model');
-    this.groupCustomModel = document.getElementById('group-custom-model');
-    this.inputCustomModel = document.getElementById('input-custom-model');
-    this.selectTtsEngine = document.getElementById('select-tts-engine');
-    this.groupTtsVoice = document.getElementById('group-tts-voice');
-    this.selectTtsVoice = document.getElementById('select-tts-voice');
+    this.selectOrTtsModel = document.getElementById('select-or-tts-model');
+    this.inputOrTtsVoice = document.getElementById('input-or-tts-voice');
+    this.btnTestOrVoice = document.getElementById('btn-test-or-voice');
+    this.orTestStatus = document.getElementById('or-test-status');
     this.apiTestStatusBox = document.getElementById('api-test-status-box');
-    this.btnToggleKeyVisibility = document.getElementById('btn-toggle-key-visibility');
     this.btnTestApi = document.getElementById('btn-test-api');
     this.btnSaveApi = document.getElementById('btn-save-api');
   }
@@ -120,13 +166,13 @@ class SweetheartApp {
   }
 
   initApp() {
-    // Restore active character preference
+    // Restore active character preference (default to zundamon)
     const savedCharId = storage.getActiveCharacterId();
     this.activeChar = this.characters.find(c => c.id === savedCharId) || this.characters[0];
 
     // Load settings & theme
     const settings = storage.getSettings();
-    document.body.setAttribute('data-theme', settings.theme || this.activeChar.bgTheme || 'blossom');
+    document.body.setAttribute('data-theme', settings.theme || this.activeChar.bgTheme || 'zunda');
     soundController.soundEnabled = settings.sound !== false;
     soundController.ttsEnabled = settings.tts !== false;
     this.updateTtsButtonState();
@@ -147,13 +193,23 @@ class SweetheartApp {
     this.populateApiInputs();
   }
 
-  checkApiKeyStatus() {
+  async checkApiKeyStatus() {
     const apiKey = storage.getApiKey();
     if (apiKey) {
       this.apiWarningBanner.style.display = 'none';
-    } else {
-      this.apiWarningBanner.style.display = 'flex';
+      return;
     }
+    try {
+      const res = await fetch('/api/check').catch(() => null);
+      if (res && res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.configured) {
+          this.apiWarningBanner.style.display = 'none';
+          return;
+        }
+      }
+    } catch (_) {}
+    this.apiWarningBanner.style.display = 'flex';
   }
 
   loadCharacterData() {
@@ -163,14 +219,14 @@ class SweetheartApp {
     this.headerAvatarImg.src = this.activeChar.avatar;
     this.headerCharName.textContent = shortName;
     this.headerCharStatus.textContent = this.activeChar.statusMessage;
-    this.chatTextarea.placeholder = `${shortName}에게 다정하게 말을 걸어보세요...`;
+    this.chatTextarea.placeholder = `${shortName}에게 재미있는 이야기를 들려주세요... (영어 단어도 물어봐요!)`;
 
     // Stage Profile Info
     if (this.stageAvatarMini) {
       this.stageAvatarMini.src = this.activeChar.avatar;
     }
     if (this.stageCharName) {
-      const icon = this.activeChar.gender === 'female' ? '🌸' : '📘';
+      const icon = this.activeChar.gender === 'fairy' ? '🌱' : (this.activeChar.gender === 'female' ? '🌸' : '📘');
       this.stageCharName.innerHTML = `${this.activeChar.name} <span>${icon}</span>`;
     }
 
@@ -258,7 +314,7 @@ class SweetheartApp {
     if (!isUser && !isGift) {
       const btnSpeak = document.createElement('button');
       btnSpeak.className = 'btn-msg-speak';
-      btnSpeak.title = '음성 다시 듣기 (Gemini TTS)';
+      btnSpeak.title = '음성 다시 듣기 (Gemini Flash TTS)';
       btnSpeak.innerHTML = '🔊';
       btnSpeak.onclick = () => {
         this.speakCharacter(msg.text, msg.emotion || 'happy');
@@ -270,15 +326,21 @@ class SweetheartApp {
     row.appendChild(contentWrap);
 
     this.messagesContainer.appendChild(row);
+    return row;
   }
 
   formatMessageText(text) {
     if (!text) return '';
-    return text
+    // Format bold **text** for easy reading by child
+    let formatted = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #4ade80; font-weight: 700;">$1</strong>')
+      .replace(/\*\*([^*]+)$/g, '<strong style="color: #4ade80; font-weight: 700;">$1</strong>')
+      .replace(/\*\*$/g, '')
       .replace(/\n/g, '<br/>');
+    return formatted;
   }
 
   scrollToBottom() {
@@ -292,7 +354,7 @@ class SweetheartApp {
     this.sideIntimacyBadge.textContent = info.badge;
     this.sideIntimacyTitle.textContent = info.title;
 
-    let nextThreshold = 100;
+    let nextThreshold = 80;
     if (affection < 30) nextThreshold = 30;
     else if (affection < 80) nextThreshold = 80;
     else if (affection < 160) nextThreshold = 160;
@@ -306,12 +368,13 @@ class SweetheartApp {
 
   renderQuickReplies() {
     this.quickRepliesContainer.innerHTML = '';
-    const replies = QUICK_REPLIES[this.activeChar.id] || QUICK_REPLIES.hiyori || [];
+    const replies = QUICK_REPLIES[this.activeChar.id] || QUICK_REPLIES.zundamon || [];
     replies.forEach((text) => {
       const chip = document.createElement('button');
       chip.className = 'quick-reply-chip';
       chip.textContent = text;
       chip.onclick = () => {
+        if (this.isStreaming || soundController.isSpeaking()) return;
         this.chatTextarea.value = text;
         this.sendMessage();
       };
@@ -335,7 +398,7 @@ class SweetheartApp {
         <div class="char-card-rel">${char.relation}</div>
         <div class="char-card-desc">${char.description}</div>
         <button class="btn-send-gift" style="margin-top: 6px; width: 100%; pointer-events: none;">
-          ${isSelected ? '현재 대화 중 ✨' : '이 캐릭터로 변경하기'}
+          ${isSelected ? '현재 단짝 친구 ✨' : '이 친구로 변경하기'}
         </button>
       `;
 
@@ -362,9 +425,10 @@ class SweetheartApp {
     if (this.live2dLoading) {
       this.live2dLoading.style.display = 'flex';
       this.live2dLoading.style.opacity = '1';
+      const icon = target.gender === 'fairy' ? '🌱' : (target.gender === 'female' ? '🌸' : '📘');
       this.live2dLoading.innerHTML = `
         <div class="live2d-loading-spinner"></div>
-        <span>${target.gender === 'female' ? '🌸' : '📘'} ${target.name.split(' ')[0]} 불러오는 중...</span>
+        <span>${icon} ${target.name.split(' ')[0]} 불러오는 중...</span>
       `;
     }
 
@@ -415,7 +479,7 @@ class SweetheartApp {
         <span class="gift-icon">${gift.icon}</span>
         <div class="gift-name">${gift.name}</div>
         <div class="gift-desc">${gift.description}</div>
-        <div class="gift-affection">+${gift.affection} 호감도</div>
+        <div class="gift-affection">+${gift.affection} 우정 점수</div>
         <button class="btn-send-gift" data-gift-id="${gift.id}">선물하기 💝</button>
       `;
 
@@ -443,14 +507,13 @@ class SweetheartApp {
 
     // Update Action / Subtitle Bubble
     if (this.live2dActionBubble) {
-      const desc = description || (this.live2d?.emotionMap[emotion]?.description || '다정하게 바라본다');
+      const desc = description || '다정하게 바라본다';
       this.live2dActionBubble.textContent = `*${desc}*`;
     }
   }
 
   /**
-   * High-fidelity speech synthesis using Gemini 3.8 Flash-Lite TTS
-   * Directly drives real-time audio lip-sync on Hiyori Live2D!
+   * High-fidelity speech synthesis using Gemini Flash TTS
    */
   speakCharacter(text, emotion = 'neutral') {
     if (!text) return;
@@ -471,7 +534,51 @@ class SweetheartApp {
     });
   }
 
+  updateInteractiveControls(disabled) {
+    const touchButtons = document.querySelectorAll('.btn-touch-action');
+    touchButtons.forEach(btn => {
+      btn.disabled = disabled;
+      if (disabled) btn.classList.add('disabled-during-chat');
+      else btn.classList.remove('disabled-during-chat');
+    });
+
+    const quickGiftBtn = document.getElementById('btn-quick-gift');
+    if (quickGiftBtn) {
+      quickGiftBtn.disabled = disabled;
+      if (disabled) quickGiftBtn.classList.add('disabled-during-chat');
+      else quickGiftBtn.classList.remove('disabled-during-chat');
+    }
+
+    const inputTools = [
+      document.getElementById('btn-input-gift'),
+      document.getElementById('btn-input-heart')
+    ];
+    inputTools.forEach(btn => {
+      if (btn) {
+        btn.disabled = disabled;
+        if (disabled) btn.classList.add('disabled-during-chat');
+        else btn.classList.remove('disabled-during-chat');
+      }
+    });
+
+    const quickChips = document.querySelectorAll('.quick-reply-chip');
+    quickChips.forEach(chip => {
+      chip.disabled = disabled;
+      if (disabled) chip.classList.add('disabled-during-chat');
+      else chip.classList.remove('disabled-during-chat');
+    });
+  }
+
   handleLive2DHit(hitInfo) {
+    // If the character is currently streaming or speaking a dialogue reply, DO NOT interrupt the conversation!
+    if (this.isStreaming || soundController.isSpeaking()) {
+      if (this.particleManager) {
+        const rect = this.live2dCanvas.getBoundingClientRect();
+        this.particleManager.burst(rect.left + rect.width / 2, rect.top + rect.height * 0.4, 10);
+      }
+      return;
+    }
+
     // Heart particles
     if (this.particleManager) {
       const rect = this.live2dCanvas.getBoundingClientRect();
@@ -493,43 +600,47 @@ class SweetheartApp {
 
   handleTouchAction(actionType) {
     if (!this.live2d) return;
+    // Block touch actions while character is answering or speaking to prevent interrupting speech
+    if (this.isStreaming || soundController.isSpeaking()) return;
+    const isZundamon = this.activeChar.id === 'zundamon';
     const isChitose = this.activeChar.id === 'chitose';
 
     if (actionType === 'head') {
       this.live2d.setEmotion('happy');
-      this.live2d.playMotion('Tap', 0);
+      this.live2d.playMotion(isZundamon ? 'Happy' : 'Tap', 0);
       this.handleLive2DHit({
         area: 'head',
         emotion: 'happy',
-        text: isChitose
-          ? '머리 쓰다듬어주는 거야? ...나 애 취급하는 건 아니지? 그래도 네 손길은 좋아.'
-          : '머리 쓰다듬어주니까 너무 기분 좋다... 헤헤 💕'
+        text: isZundamon
+          ? '머리 쓰다듬어주니까 간질간질하고 너무 좋아! 헤헤, 고마워 친구야! 🌱'
+          : (isChitose ? '머리 쓰다듬어주는 거야? ...나 애 취급하는 건 아니지? 그래도 네 손길은 좋아.' : '머리 쓰다듬어주니까 너무 기분 좋다... 헤헤 💕')
       });
     } else if (actionType === 'cheek') {
       this.live2d.setEmotion('shy');
-      this.live2d.playMotion(isChitose ? 'Idle' : 'FlickDown', 0);
+      this.live2d.playMotion(isZundamon ? 'Shy' : (isChitose ? 'Idle' : 'FlickDown'), 0);
       this.handleLive2DHit({
         area: 'cheek',
         emotion: 'shy',
-        text: isChitose
-          ? '볼은 왜 꼬집어? ...간지러우니까 그만해, 얼굴 빨개지잖아.'
-          : '볼 만지지 마아~ 얼굴 빨개진단 말이야! 😳'
+        text: isZundamon
+          ? '볼 만지지 마아~ 볼 빨개진단 말이야! 에헤헤, 간지러워라! 😆'
+          : (isChitose ? '볼은 왜 꼬집어? ...간지러우니까 그만해, 얼굴 빨개지잖아.' : '볼 만지지 마아~ 얼굴 빨개진단 말이야! 😳')
       });
     } else if (actionType === 'love') {
       this.live2d.setEmotion('love');
-      this.live2d.playMotion(isChitose ? 'Tap' : 'Tap@Body', isChitose ? 1 : 0);
+      this.live2d.playMotion(isZundamon ? 'Tap' : (isChitose ? 'Tap' : 'Tap@Body'), isChitose ? 1 : 0);
       this.handleLive2DHit({
         area: 'chest',
         emotion: 'love',
-        text: isChitose
-          ? '나도 진심으로 너 좋아해. 내 옆에 계속 있어줘.'
-          : '나도 자기 세상에서 제일 사랑해! 영원히 함께하자 🥰'
+        text: isZundamon
+          ? '우리는 세상에서 제일 좋은 단짝 친구야! 평생 사이좋게 지내자! 💚'
+          : (isChitose ? '나도 진심으로 너 좋아해. 내 옆에 계속 있어줘.' : '나도 자기 세상에서 제일 사랑해! 영원히 함께하자 🥰')
       });
     }
   }
 
   async sendGift(gift) {
     this.closeModal(this.modalGiftShop);
+    if (this.isStreaming || soundController.isSpeaking()) return;
 
     // Audio & Hearts
     soundController.playGift();
@@ -555,32 +666,67 @@ class SweetheartApp {
     // Live2D Reaction: Love / Happy
     if (this.live2d) {
       this.live2d.setEmotion('love');
+      const isZundamon = this.activeChar.id === 'zundamon';
       const isChitose = this.activeChar.id === 'chitose';
-      this.live2d.playMotion(isChitose ? 'Tap' : 'Tap@Body', isChitose ? 1 : 0);
+      this.live2d.playMotion(isZundamon ? 'Happy' : (isChitose ? 'Tap' : 'Tap@Body'), isChitose ? 1 : 0);
     }
 
     // Character response
-    const replyText = gift.dialogues[this.activeChar.id] || gift.dialogues.hiyori;
+    const replyText = gift.dialogues[this.activeChar.id] || gift.dialogues.zundamon || gift.dialogues.hiyori;
     const { text: cleanReply, emotion } = parseEmotionAndText(replyText);
+
+    const sessionId = soundController.startStreamSession();
 
     setTimeout(() => {
       const botMsg = {
         id: 'msg_' + Date.now(),
         role: 'model',
-        text: cleanReply,
+        text: '',
         emotion: emotion || 'love',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       this.messages.push(botMsg);
-      this.appendMessageNode(botMsg);
-      storage.saveChats(this.activeChar.id, this.messages);
+      const row = this.appendMessageNode(botMsg);
+      const bubbleEl = row.querySelector('.msg-bubble');
+      bubbleEl.innerHTML = '<span class="typing-cursor">▌</span>';
       this.scrollToBottom();
 
       soundController.playReceive();
-      this.speakCharacter(cleanReply, emotion || 'love');
-    }, 600);
+
+      // Synchronized sentence & word appearance for gift!
+      soundController.enqueueSentence({
+        text: cleanReply,
+        emotion: emotion || 'love',
+        charId: this.activeChar.id,
+        voiceSettings: this.activeChar.voiceSettings,
+        sessionId,
+        onStart: () => {
+          if (this.live2d) this.live2d.setSpeaking(true);
+        },
+        onProgress: (currentProgressText) => {
+          bubbleEl.innerHTML = this.formatMessageText(currentProgressText) + '<span class="typing-cursor">▌</span>';
+          this.scrollToBottom();
+        },
+        onEnd: () => {
+          botMsg.text = cleanReply;
+          bubbleEl.innerHTML = this.formatMessageText(cleanReply);
+          storage.saveChats(this.activeChar.id, this.messages);
+          if (this.live2d) this.live2d.setSpeaking(false);
+        },
+        onLipSync: (volume) => {
+          if (this.live2d) this.live2d.setLipSyncValue(volume);
+        }
+      });
+    }, 450);
   }
 
+  /**
+   * Pipelined sentence-by-sentence streaming TTS:
+   * 1. Detects completed sentences from Gemini stream in real-time.
+   * 2. Immediately dispatches sentences to TTS prefetch queue.
+   * 3. Plays audio and simultaneously types out text synchronously with Live2D lip sync!
+   * 4. Ensures text and voice appear at the EXACT same time without post-text lag.
+   */
   async sendMessage() {
     const text = this.chatTextarea.value.trim();
     if (!text || this.isStreaming) return;
@@ -602,120 +748,138 @@ class SweetheartApp {
     storage.saveChats(this.activeChar.id, this.messages);
     this.scrollToBottom();
 
-    // Live2D thinking state
-    if (this.live2d) {
-      this.live2d.setEmotion('thinking');
-    }
+    // Start a new speech session (cancels any previously playing voice)
+    const sessionId = soundController.startStreamSession();
 
-    // Show typing indicator
+    // Show initial typing indicator
     const typingIndicator = this.createTypingIndicator();
     this.messagesContainer.appendChild(typingIndicator);
     this.scrollToBottom();
 
     this.isStreaming = true;
     this.btnSendMessage.disabled = true;
+    this.updateInteractiveControls(true);
 
-    const apiKey = storage.getApiKey();
+    // Live2D thinking state
+    if (this.live2d) {
+      this.live2d.setEmotion('thinking');
+    }
+
+    const apiKey = storage.getApiKey() || DEFAULT_API_KEY;
     const model = storage.getModel() || DEFAULT_MODEL;
 
+    let accumulatedRaw = '';
+
     try {
-      if (apiKey) {
-        // Live Gemini API call
-        let accumulatedRaw = '';
-        await callGeminiStream({
-          apiKey,
-          model,
-          messages: this.messages,
-          systemPrompt: this.activeChar.systemPrompt,
-          onChunk: (chunk, fullText) => {
-            accumulatedRaw = fullText;
-          }
-        });
+      soundController.playReceive();
 
-        // Remove typing indicator
-        if (typingIndicator.parentNode) {
-          typingIndicator.parentNode.removeChild(typingIndicator);
+      // 1. Stream the complete response from Gemini 3.8 Flash
+      await callGeminiStream({
+        apiKey,
+        model,
+        messages: this.messages,
+        systemPrompt: this.activeChar.systemPrompt,
+        onChunk: (chunk, fullText) => {
+          accumulatedRaw = fullText;
         }
+      });
 
-        const { text: cleanReply, emotion } = parseEmotionAndText(accumulatedRaw);
+      // 2. Parse final text and emotion
+      const { text: finalText, emotion: finalEmotion } = parseEmotionAndText(accumulatedRaw);
+      if (!finalText) throw new Error('빈 답변이 반환되었습니다.');
 
-        // Update Live2D
-        if (this.live2d) {
-          await this.live2d.setEmotion(emotion);
-        }
-
-        const botMsg = {
-          id: 'msg_' + Date.now(),
-          role: 'model',
-          text: cleanReply,
-          emotion,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        this.messages.push(botMsg);
-        this.appendMessageNode(botMsg);
-        storage.saveChats(this.activeChar.id, this.messages);
-        this.scrollToBottom();
-
-        // Increment affection
-        storage.addAffection(this.activeChar.id, 1);
-        this.updateIntimacyUI();
-
-        // Audio & TTS
-        soundController.playReceive();
-        this.speakCharacter(cleanReply, emotion);
-
-      } else {
-        // High-fidelity local simulation mode when API key is not entered yet
-        await new Promise(r => setTimeout(r, 700));
-
-        if (typingIndicator.parentNode) {
-          typingIndicator.parentNode.removeChild(typingIndicator);
-        }
-
-        const simReply = getSimulatedReply(text, this.activeChar.id);
-        const { text: cleanReply, emotion } = parseEmotionAndText(simReply);
-
-        if (this.live2d) {
-          await this.live2d.setEmotion(emotion);
-        }
-
-        const botMsg = {
-          id: 'msg_' + Date.now(),
-          role: 'model',
-          text: cleanReply,
-          emotion,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        this.messages.push(botMsg);
-        this.appendMessageNode(botMsg);
-        storage.saveChats(this.activeChar.id, this.messages);
-        this.scrollToBottom();
-
-        storage.addAffection(this.activeChar.id, 1);
-        this.updateIntimacyUI();
-
-        soundController.playReceive();
-        this.speakCharacter(cleanReply, emotion);
+      // Remove initial typing indicator row
+      if (typingIndicator.parentNode) {
+        typingIndicator.parentNode.removeChild(typingIndicator);
       }
+
+      // 3. Create bot message bubble in chat UI
+      const botMsgObj = {
+        id: 'msg_' + Date.now(),
+        role: 'model',
+        text: '',
+        emotion: finalEmotion || 'happy',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      this.messages.push(botMsgObj);
+      const botRowNode = this.appendMessageNode(botMsgObj);
+      const botBubbleEl = botRowNode.querySelector('.msg-bubble');
+      // Show bouncing dots inside the bubble while TTS is preparing
+      botBubbleEl.innerHTML = '<div class="typing-bubble" style="padding: 2px 0;"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+      this.scrollToBottom();
+
+      if (finalEmotion && this.live2d) {
+        this.live2d.setEmotion(finalEmotion);
+      }
+
+      // 4. Single-audio synthesis for the ENTIRE reply:
+      // Guarantees 100% single, unbroken voice consistency (NEVER changes speaker voice mid-sentence!)
+      soundController.enqueueSentence({
+        text: finalText,
+        emotion: finalEmotion || 'happy',
+        charId: this.activeChar.id,
+        voiceSettings: this.activeChar.voiceSettings,
+        sessionId,
+        onStart: () => {
+          if (this.live2d) {
+            this.live2d.setSpeaking(true);
+            if (finalEmotion) this.live2d.setEmotion(finalEmotion);
+          }
+          if (botBubbleEl) {
+            botBubbleEl.innerHTML = '<span class="typing-cursor">▌</span>';
+          }
+        },
+        onProgress: (currentProgressText) => {
+          if (botBubbleEl) {
+            botBubbleEl.innerHTML = this.formatMessageText(currentProgressText) + '<span class="typing-cursor">▌</span>';
+            this.scrollToBottom();
+          }
+        },
+        onEnd: () => {
+          botMsgObj.text = finalText;
+          if (botBubbleEl) {
+            botBubbleEl.innerHTML = this.formatMessageText(finalText);
+          }
+          storage.saveChats(this.activeChar.id, this.messages);
+          storage.addAffection(this.activeChar.id, 1);
+          this.updateIntimacyUI();
+
+          if (this.live2d) {
+            this.live2d.setSpeaking(false);
+          }
+          this.isStreaming = false;
+          this.btnSendMessage.disabled = false;
+          this.updateInteractiveControls(false);
+          this.scrollToBottom();
+        },
+        onLipSync: (volume) => {
+          if (this.live2d) this.live2d.setLipSyncValue(volume);
+        }
+      });
+
     } catch (err) {
       console.error('Chat error:', err);
       if (typingIndicator.parentNode) {
         typingIndicator.parentNode.removeChild(typingIndicator);
       }
-
-      const errMsg = {
+      const botMsgObj = {
         id: 'msg_' + Date.now(),
         role: 'model',
-        text: `오류가 발생했어요: ${err.message || '네트워크 상태를 확인해주세요.'} [Gemini API 설정을 확인해주세요]`,
+        text: '',
         emotion: 'sad',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      this.messages.push(errMsg);
-      this.appendMessageNode(errMsg);
+      this.messages.push(botMsgObj);
+      const botRowNode = this.appendMessageNode(botMsgObj);
+      const botBubbleEl = botRowNode.querySelector('.msg-bubble');
+      const errNotice = `친구야, 잠시 신호가 고르지 않았어! 다시 한 번 이야기해줄래? 💚 (${err.message || '인터넷 연결 확인'})`;
+      botMsgObj.text = errNotice;
+      botBubbleEl.innerHTML = this.formatMessageText(errNotice);
+      storage.saveChats(this.activeChar.id, this.messages);
       if (this.live2d) this.live2d.setEmotion('sad');
-    } finally {
       this.isStreaming = false;
       this.btnSendMessage.disabled = false;
+      this.updateInteractiveControls(false);
       this.scrollToBottom();
     }
   }
@@ -725,7 +889,7 @@ class SweetheartApp {
     row.className = 'message-row bot-row typing-row';
     row.innerHTML = `
       <div class="msg-avatar-wrap">
-        <img src="${this.activeChar.avatar}" class="msg-avatar" alt="히요리" />
+        <img src="${this.activeChar.avatar}" class="msg-avatar" alt="${this.activeChar.name}" />
       </div>
       <div class="msg-content-wrap">
         <div class="typing-bubble">
@@ -739,50 +903,35 @@ class SweetheartApp {
   }
 
   populateApiInputs() {
-    this.inputApiKey.value = storage.getApiKey();
-    const savedModel = storage.getModel() || DEFAULT_MODEL;
-
-    const matchedOption = Array.from(this.selectGeminiModel.options).find(o => o.value === savedModel);
-    if (matchedOption) {
-      this.selectGeminiModel.value = savedModel;
-      this.groupCustomModel.style.display = 'none';
-    } else {
-      this.selectGeminiModel.value = 'custom';
-      this.groupCustomModel.style.display = 'flex';
-      this.inputCustomModel.value = savedModel;
+    if (this.inputOpenRouterKey) {
+      this.inputOpenRouterKey.value = storage.getOpenRouterKey();
     }
-
-    if (this.selectTtsEngine) {
-      this.selectTtsEngine.value = storage.getTtsEngine() || DEFAULT_TTS_ENGINE;
+    if (this.selectGeminiModel) {
+      this.selectGeminiModel.value = storage.getModel() || DEFAULT_MODEL;
     }
-    if (this.selectTtsVoice) {
-      this.selectTtsVoice.value = storage.getTtsVoice() || DEFAULT_TTS_VOICE;
-    }
-    if (this.groupTtsVoice && this.selectTtsEngine) {
-      this.groupTtsVoice.style.display = this.selectTtsEngine.value.startsWith('gemini') ? 'flex' : 'none';
+    if (this.selectOrTtsModel) {
+      const savedModel = storage.getOpenRouterTtsModel() || DEFAULT_TTS_ENGINE;
+      this.selectOrTtsModel.value = savedModel;
+      this.fillOrVoices(savedModel, storage.getOpenRouterTtsVoice() || DEFAULT_TTS_VOICE);
     }
   }
 
   saveApiSettings() {
-    const key = this.inputApiKey.value.trim();
-    let model = this.selectGeminiModel.value;
-    if (model === 'custom') {
-      model = this.inputCustomModel.value.trim() || DEFAULT_MODEL;
-    }
+    const key = this.inputOpenRouterKey ? this.inputOpenRouterKey.value.trim() : '';
+    const chatModel = this.selectGeminiModel ? this.selectGeminiModel.value : DEFAULT_MODEL;
+    const ttsModel = this.selectOrTtsModel ? this.selectOrTtsModel.value : DEFAULT_TTS_ENGINE;
+    const ttsVoice = this.inputOrTtsVoice ? this.inputOrTtsVoice.value : DEFAULT_TTS_VOICE;
 
-    const ttsEngine = this.selectTtsEngine ? this.selectTtsEngine.value : DEFAULT_TTS_ENGINE;
-    const ttsVoice = this.selectTtsVoice ? this.selectTtsVoice.value : DEFAULT_TTS_VOICE;
-
-    storage.setApiKey(key);
-    storage.setModel(model);
-    storage.setTtsEngine(ttsEngine);
-    storage.setTtsVoice(ttsVoice);
+    storage.setOpenRouterKey(key);
+    storage.setModel(chatModel);
+    storage.setOpenRouterTtsModel(ttsModel);
+    storage.setOpenRouterTtsVoice(ttsVoice);
     this.checkApiKeyStatus();
 
     this.apiTestStatusBox.innerHTML = `
       <div style="color: #4ade80; padding: 10px; border-radius: 8px; background: rgba(74, 222, 128, 0.1);">
         ✅ 설정이 저장되었습니다!<br/>
-        <small>대화 모델: <strong>${model}</strong> / 음성: <strong>${ttsEngine} (${ttsVoice})</strong></small>
+        <small>대화: <strong>${chatModel}</strong> / 음성: <strong>${ttsModel} (${ttsVoice})</strong></small>
       </div>
     `;
 
@@ -792,25 +941,48 @@ class SweetheartApp {
     }, 1200);
   }
 
+  setOrTestStatus(html, color = '#94a3b8') {
+    if (this.orTestStatus) {
+      this.orTestStatus.innerHTML = `<span style="color:${color}">${html}</span>`;
+    }
+  }
+
+  /** Fill the voice dropdown with the voices the chosen OpenRouter model supports. */
+  fillOrVoices(modelId, preferredVoice = '') {
+    if (!this.inputOrTtsVoice) return;
+    const model = OPENROUTER_SPEECH_MODELS.find(m => m.id === modelId) || OPENROUTER_SPEECH_MODELS[0];
+    const voices = model.voices || [];
+    this.inputOrTtsVoice.innerHTML = '';
+    for (const v of voices) {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = v.name;
+      this.inputOrTtsVoice.appendChild(opt);
+    }
+    const voiceValues = voices.map(v => v.id);
+    if (preferredVoice && voiceValues.includes(preferredVoice)) {
+      this.inputOrTtsVoice.value = preferredVoice;
+    } else if (voices.length > 0) {
+      this.inputOrTtsVoice.value = voices[0].id;
+    }
+  }
+
   async testApiConnection() {
-    const key = this.inputApiKey.value.trim();
+    const key = (this.inputOpenRouterKey ? this.inputOpenRouterKey.value.trim() : '') || storage.getOpenRouterKey();
     if (!key) {
       this.apiTestStatusBox.innerHTML = `
         <div style="color: #f87171; padding: 10px; border-radius: 8px; background: rgba(248, 113, 113, 0.1);">
-          ❌ API 키를 먼저 입력해주세요.
+          ❌ OpenRouter API 키를 먼저 입력해주세요.
         </div>
       `;
       return;
     }
 
-    let model = this.selectGeminiModel.value;
-    if (model === 'custom') {
-      model = this.inputCustomModel.value.trim() || DEFAULT_MODEL;
-    }
+    const model = this.selectGeminiModel ? this.selectGeminiModel.value : DEFAULT_MODEL;
 
     this.apiTestStatusBox.innerHTML = `
       <div style="color: #38bdf8; padding: 10px; border-radius: 8px; background: rgba(56, 189, 248, 0.1);">
-        ⏳ Gemini (${model}) 서버 및 TTS 연결을 확인하는 중...
+        ⏳ OpenRouter (${model}) 연결을 확인하는 중...
       </div>
     `;
 
@@ -819,8 +991,8 @@ class SweetheartApp {
       const res = await testConnection(key, model);
       this.apiTestStatusBox.innerHTML = `
         <div style="color: #4ade80; padding: 10px; border-radius: 8px; background: rgba(74, 222, 128, 0.1);">
-          🎉 연결 성공! (Gemini 응답: "${res.text || '정상'}")<br/>
-          <small>✨ Gemini 3.8 Flash-Lite TTS도 이 키로 무료 티어에서 바로 작동합니다!</small>
+          🎉 연결 성공! (AI 응답: "${res.text || 'OK'}")<br/>
+          <small>✨ 대화와 고품질 음성이 정상 작동합니다!</small>
         </div>
       `;
     } catch (err) {
@@ -849,8 +1021,8 @@ class SweetheartApp {
   }
 
   toggleTheme() {
-    const themes = ['blossom', 'midnight', 'sunshine'];
-    const current = document.body.getAttribute('data-theme') || 'blossom';
+    const themes = ['zunda', 'blossom', 'midnight', 'sunshine'];
+    const current = document.body.getAttribute('data-theme') || 'zunda';
     const nextIdx = (themes.indexOf(current) + 1) % themes.length;
     const nextTheme = themes[nextIdx];
 
@@ -922,7 +1094,8 @@ class SweetheartApp {
         this.updateIntimacyUI();
         if (this.live2d) {
           this.live2d.setEmotion('love');
-          this.live2d.playMotion('Tap@Body', 0);
+          const isZundamon = this.activeChar.id === 'zundamon';
+          this.live2d.playMotion(isZundamon ? 'Happy' : 'Tap@Body', 0);
         }
       };
     }
@@ -963,7 +1136,7 @@ class SweetheartApp {
     if (this.btnSideClearChat) {
       this.btnSideClearChat.onclick = () => {
         const charName = this.activeChar.name.split(' ')[0];
-        if (confirm(`${charName}와의 대화 내역을 모두 지우시겠어요? (호감도는 유지됩니다)`)) {
+        if (confirm(`${charName}와의 대화 내역을 모두 지우시겠어요? (우정 점수는 유지됩니다)`)) {
           storage.clearChats(this.activeChar.id);
           this.messages = [];
           this.loadCharacterData();
@@ -1016,6 +1189,36 @@ class SweetheartApp {
 
     if (this.btnTestApi) this.btnTestApi.onclick = () => this.testApiConnection();
     if (this.btnSaveApi) this.btnSaveApi.onclick = () => this.saveApiSettings();
+    if (this.selectOrTtsModel) {
+      this.selectOrTtsModel.onchange = () => this.fillOrVoices(this.selectOrTtsModel.value, '');
+    }
+    if (this.btnTestOrVoice) {
+      this.btnTestOrVoice.onclick = async () => {
+        const key = this.inputOpenRouterKey ? this.inputOpenRouterKey.value.trim() : '';
+        if (!key) {
+          this.setOrTestStatus('❌ OpenRouter API 키를 먼저 입력해주세요!', '#f87171');
+          return;
+        }
+        const model = this.selectOrTtsModel ? this.selectOrTtsModel.value : DEFAULT_TTS_ENGINE;
+        const voice = this.inputOrTtsVoice ? this.inputOrTtsVoice.value : 'Leda';
+        this.btnTestOrVoice.disabled = true;
+        this.setOrTestStatus('⏳ 음성 생성 및 1초 미리듣기 테스트 중...', '#38bdf8');
+        try {
+          await soundController.testOpenRouterTts({ apiKey: key, model, voice });
+          this.setOrTestStatus('✅ 테스트 성공! 즌다몬의 귀여운 목소리가 재생되었습니다.', '#4ade80');
+        } catch (err) {
+          this.setOrTestStatus(`❌ 연결 실패: ${err.message}`, '#f87171');
+        } finally {
+          this.btnTestOrVoice.disabled = false;
+        }
+      };
+    }
+    if (this.btnToggleOrKeyVisibility) {
+      this.btnToggleOrKeyVisibility.onclick = () => {
+        const t = this.inputOpenRouterKey.type === 'password' ? 'text' : 'password';
+        this.inputOpenRouterKey.type = t;
+      };
+    }
 
     // Modal close buttons
     document.querySelectorAll('.btn-modal-close, [data-close]').forEach(el => {

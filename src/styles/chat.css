@@ -245,10 +245,11 @@
 }
 
 .quick-reply-chip {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-glass);
-  color: var(--text-secondary);
+  background: #141f17 !important;
+  border: 1.5px solid rgba(74, 222, 128, 0.3) !important;
+  color: #f1f5f9 !important;
   font-size: 12px;
+  font-weight: 500;
   padding: 6px 12px;
   border-radius: 16px;
   cursor: pointer;
@@ -257,9 +258,9 @@
 }
 
 .quick-reply-chip:hover {
-  background: rgba(255, 117, 140, 0.15);
-  border-color: rgba(255, 117, 140, 0.4);
-  color: #fff;
+  background: #1e3323 !important;
+  border-color: #4ade80 !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
 }
 
@@ -359,4 +360,19 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Streaming Word-by-Word Synchronized Typing Cursor */
+.typing-cursor {
+  display: inline-block;
+  color: var(--accent-pink, #4ade80);
+  font-weight: 700;
+  margin-left: 2px;
+  animation: blinkCursor 0.7s infinite;
+  vertical-align: baseline;
+}
+
+@keyframes blinkCursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }

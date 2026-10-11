@@ -32,6 +32,21 @@
   --font-display: 'Outfit', 'Pretendard', sans-serif;
 }
 
+/* Theme: Zundamon Fresh Mint / Edamame Green */
+body[data-theme='zunda'] {
+  --bg-primary: #0a140d;
+  --bg-secondary: #101f14;
+  --bg-card: rgba(20, 38, 26, 0.85);
+  --bg-glass: rgba(16, 31, 20, 0.75);
+  --accent-pink: #4ade80;
+  --accent-rose: #22c55e;
+  --accent-gradient: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+  --accent-glow: rgba(74, 222, 128, 0.35);
+  --border-focus: rgba(74, 222, 128, 0.5);
+  --user-bubble: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  --shadow-glow: 0 0 25px rgba(74, 222, 128, 0.25);
+}
+
 /* Theme: Midnight Purple */
 body[data-theme='midnight'] {
   --bg-primary: #0b0a12;

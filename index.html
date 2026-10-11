@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Sweet Hiyori AI - 모모세 히요리 Live2D 여자친구 채팅</title>
-  <meta name="description" content="Live2D 모모세 히요리와 Gemini 3.5 Flash Lite 기반의 달콤하고 생생한 인터랙티브 가상 여자친구 웹앱" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>초등 2학년 단짝 친구 즌다몬 🌱 - Gemini 3.5 & Flash TTS</title>
+  <meta name="description" content="Live2D 즌다몬과 Google Gemini 3.5 Flash & Flash TTS 기반의 초등학교 2학년 맞춤형 AI 단짝 친구 웹앱" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
   
   <link rel="stylesheet" href="/src/styles/index.css" />
   <link rel="stylesheet" href="/src/styles/chat.css" />
@@ -17,7 +17,7 @@
   <script src="./lib/pixi.min.js"></script>
   <script src="./lib/cubism4.min.js"></script>
 </head>
-<body data-theme="blossom" data-mobile-view="stage">
+<body data-theme="zunda" data-mobile-view="stage">
   <!-- Interactive Canvas Particle for Hearts / Sparkles -->
   <canvas id="particle-canvas"></canvas>
 
@@ -29,29 +29,29 @@
   </nav>
 
   <div class="app-container">
-    <!-- Left Stage: Interactive Live2D Character (Momose Hiyori) -->
+    <!-- Left Stage: Interactive Live2D Character (Zundamon) -->
     <section class="live2d-stage" id="live2d-stage">
       <div class="live2d-top-bar">
         <div class="live2d-profile-info">
-          <img src="./assets/hiyori.jpg" alt="히요리" class="live2d-avatar-mini" id="stage-avatar-mini" />
+          <img src="./assets/zundamon.png" alt="즌다몬" class="live2d-avatar-mini" id="stage-avatar-mini" />
           <div class="live2d-char-meta">
             <span class="live2d-char-name-title" id="stage-char-name">
-              모모세 히요리 <span>🌸</span>
+              즌다몬 <span>🌱</span>
             </span>
             <span class="live2d-char-status-sub">
-              <span class="status-dot-mini" style="background:#10b981; box-shadow:0 0 6px #10b981;"></span> 온라인 (Live2D)
+              <span class="status-dot-mini" style="background:#22c55e; box-shadow:0 0 6px #22c55e;"></span> 단짝 요정 (Live2D)
             </span>
           </div>
         </div>
 
         <div class="live2d-top-actions">
           <div class="live2d-emotion-pill" id="live2d-emotion-pill" title="현재 감정 상태">
-            <span>🥰</span> 설렘가득
+            <span>🌱</span> 신난다!
           </div>
           <button class="btn-stage-tool" id="btn-zoom-toggle" title="시점 전환 (클로즈업 / 전신)">
             🔍
           </button>
-          <button class="btn-stage-tool" id="btn-stage-char-select" title="캐릭터 변경 (히요리 / 치토세)">
+          <button class="btn-stage-tool" id="btn-stage-char-select" title="캐릭터 변경">
             👥
           </button>
         </div>
@@ -63,28 +63,28 @@
         
         <div class="live2d-loading" id="live2d-loading">
           <div class="live2d-loading-spinner"></div>
-          <span>🌸 히요리 불러오는 중...</span>
+          <span>🌱 즌다몬 불러오는 중...</span>
         </div>
 
         <!-- Dynamic Action / Thought Subtitle -->
         <div class="live2d-action-bubble" id="live2d-action-bubble">
-          *가슴에 손을 얹고 다정하게 미소 짓는다*
+          *다정하게 바라보며 귀를 쫑긋거린다*
         </div>
       </div>
 
       <!-- Quick Touch Interaction Hotbar -->
       <div class="live2d-touch-bar">
-        <button class="btn-touch-action" data-touch="head" title="히요리의 머리를 부드럽게 쓰다듬어줍니다">
-          <span>🌸</span> 쓰다듬기
+        <button class="btn-touch-action" data-touch="head" title="즌다몬의 머리를 부드럽게 쓰다듬어줍니다">
+          <span>🌱</span> 쓰다듬기
         </button>
-        <button class="btn-touch-action" data-touch="cheek" title="말랑말랑한 볼을 살짝 꼬집어봅니다">
-          <span>🤏</span> 볼 꼬집기
+        <button class="btn-touch-action" data-touch="cheek" title="말랑말랑한 볼을 만져봅니다">
+          <span>🤏</span> 볼 만지기
         </button>
-        <button class="btn-touch-action" data-touch="love" title="히요리에게 진심 어린 사랑을 고백합니다">
-          <span>💖</span> 사랑해
+        <button class="btn-touch-action" data-touch="love" title="즌다몬과 단짝 친구 약속을 합니다">
+          <span>💚</span> 단짝 최고!
         </button>
         <button class="btn-touch-action" id="btn-quick-gift" title="선물가게 열기">
-          <span>🎁</span> 선물
+          <span>🎁</span> 간식 선물
         </button>
       </div>
 
@@ -92,15 +92,15 @@
       <div class="live2d-stage-footer">
         <div class="intimacy-widget">
           <div class="intimacy-header">
-            <span class="intimacy-title">💖 애정도 (호감도)</span>
-            <span class="intimacy-badge" id="side-intimacy-badge">🌸 Lv.2</span>
+            <span class="intimacy-title">💚 우정 레벨 (단짝 점수)</span>
+            <span class="intimacy-badge" id="side-intimacy-badge">🌱 Lv.2</span>
           </div>
           <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="side-intimacy-fill" style="width: 35%;"></div>
+            <div class="progress-bar-fill" id="side-intimacy-fill" style="width: 40%;"></div>
           </div>
           <div class="intimacy-footer">
-            <span id="side-intimacy-title">달콤한 썸</span>
-            <span id="side-intimacy-pts">35 / 100 pt</span>
+            <span id="side-intimacy-title">친한 친구</span>
+            <span id="side-intimacy-pts">40 / 80 pt</span>
           </div>
         </div>
 
@@ -109,10 +109,10 @@
             <span>🎁</span> 선물
           </button>
           <button class="btn-stage-action" id="btn-side-char-select">
-            <span>👥</span> 캐릭터
+            <span>👥</span> 친구들
           </button>
           <button class="btn-stage-action" id="btn-side-api-settings">
-            <span>🔑</span> API
+            <span>⚙️</span> 설정
           </button>
           <button class="btn-stage-action" id="btn-side-clear-chat" title="대화 비우기">
             <span>🧹</span>
@@ -127,31 +127,31 @@
       <header class="chat-header">
         <div class="header-left" id="btn-header-profile" title="캐릭터 변경">
           <div class="avatar-header-wrap">
-            <img src="./assets/hiyori.jpg" alt="캐릭터 프로필" class="avatar-header" id="header-avatar-img" />
-            <div class="emotion-tag-badge" id="header-emotion-badge" title="현재 감정 상태">🥰</div>
+            <img src="./assets/zundamon.png" alt="캐릭터 프로필" class="avatar-header" id="header-avatar-img" />
+            <div class="emotion-tag-badge" id="header-emotion-badge" title="현재 감정 상태">🌱</div>
           </div>
           <div class="header-info">
             <div class="header-name">
-              <span id="header-char-name">히요리</span>
+              <span id="header-char-name">즌다몬</span>
               <span class="status-dot-mini" title="온라인"></span>
             </div>
             <div class="header-status" id="header-char-status">
-              자기 생각하면서 두근두근 기다리는 중 💕
+              너랑 오늘 신나게 놀고 영어 단어도 배울래! 💚
             </div>
           </div>
         </div>
 
         <div class="header-actions">
-          <button class="header-btn" id="btn-header-chars" title="캐릭터 변경 (히요리 / 치토세)">👥</button>
+          <button class="header-btn" id="btn-header-chars" title="캐릭터 변경">👥</button>
           <button class="header-btn" id="btn-header-gift" title="선물하기">🎁</button>
-          <button class="header-btn" id="btn-header-tts" title="음성 읽기 (TTS) 토글">🔊</button>
+          <button class="header-btn" id="btn-header-tts" title="음성 읽기 (TTS) 켜기/끄기">🔊</button>
           <button class="header-btn" id="btn-header-theme" title="테마 변경">🎨</button>
           <button class="header-btn" id="btn-header-settings" title="Gemini API 설정">⚙️</button>
         </div>
       </header>
 
       <!-- Warning Banner if API Key is not set -->
-      <div class="api-warning-banner" id="api-warning-banner">
+      <div class="api-warning-banner" id="api-warning-banner" style="display: none;">
         <div class="banner-left">
           <span>🔑</span>
           <span>Gemini API 키가 아직 등록되지 않았어요 (시뮬레이션 모드 작동 중)</span>
@@ -179,7 +179,7 @@
             <textarea 
               id="chat-textarea" 
               class="chat-textarea" 
-              placeholder="히요리에게 다정하게 말을 걸어보세요..."
+              placeholder="즌다몬에게 재미있는 이야기를 들려주세요... (영어 단어도 물어봐요!)"
               rows="1"
             ></textarea>
           </div>
@@ -197,89 +197,77 @@
     <div class="modal-box">
       <div class="modal-header">
         <div class="modal-title">
-          <span>🔑</span> Gemini 3.5 API 설정
+          <span>⚙️</span> OpenRouter AI 대화 & 음성(TTS) 설정
         </div>
         <button class="btn-modal-close" data-close="modal-api-settings">✕</button>
       </div>
 
       <div class="modal-content">
-        <div class="api-notice-box">
-          ✨ <strong>Google AI Studio</strong>에서 발급받은 무료 API Key를 입력하세요.<br/>
-          입력하신 키는 사용자의 웹 브라우저(localStorage)에만 안전하게 저장되며 외부 서버로 전송되지 않습니다.
+        <div class="api-notice-box" style="border-left-color: #22c55e;">
+          ✨ <strong>OpenRouter</strong> 키가 등록되어 AI 대화와 음성이 바로 작동합니다.<br/>
+          초등학교 2학년 눈높이에 맞춘 다정한 한국어 대화와 귀여운 기초 영단어 지도가 지원됩니다.
         </div>
 
         <div class="form-group">
           <label class="form-label">
-            Gemini API Key
-            <span class="form-label-hint">필수</span>
+            OpenRouter API Key
+            <span class="form-label-hint">등록됨</span>
           </label>
           <div class="input-password-wrap">
             <input 
               type="password" 
-              id="input-api-key" 
+              id="input-openrouter-key" 
               class="form-input" 
-              placeholder="AIzaSy..." 
+              placeholder="sk-or-v1-..." 
               autocomplete="off"
             />
-            <button type="button" class="btn-toggle-eye" id="btn-toggle-key-visibility">👁️</button>
+            <button type="button" class="btn-toggle-eye" id="btn-toggle-or-key-visibility">👁️</button>
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">
-            AI 모델 선택
-            <span class="form-label-hint">Gemini 3.5 Flash Lite 기본 적용</span>
+            대화 AI 모델
+            <span class="form-label-hint">초등 2학년 맞춤형</span>
           </label>
           <select id="select-gemini-model" class="form-select">
-            <option value="gemini-3.5-flash-lite" selected>gemini-3.5-flash-lite (제미나이 3.5 플래시 라이트)</option>
-            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (초고속 추천)</option>
-            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
-            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-            <option value="custom">직접 입력 (Custom Model ID)</option>
+            <option value="google/gemini-3.8-flash" selected>✨ Google: Gemini 3.8 Flash (최신 모델 - 추천)</option>
+            <option value="google/gemini-3.5-flash">Google: Gemini 3.5 Flash</option>
+            <option value="google/gemini-2.5-flash">Google: Gemini 2.5 Flash</option>
           </select>
-        </div>
-
-        <div class="form-group" id="group-custom-model" style="display: none;">
-          <label class="form-label">직접 입력 모델명</label>
-          <input 
-            type="text" 
-            id="input-custom-model" 
-            class="form-input" 
-            placeholder="예: gemini-3.5-flash-lite"
-          />
         </div>
 
         <div class="form-group">
           <label class="form-label">
-            음성 (TTS) 엔진 선택
-            <span class="form-label-hint">Gemini 3.8 Flash-Lite TTS 무료 지원</span>
+            음성 (TTS) 모델
+            <span class="form-label-hint">초등 2학년 맞춤</span>
           </label>
-          <select id="select-tts-engine" class="form-select">
-            <option value="gemini-3.8-flash-lite-tts" selected>✨ Gemini 3.8 Flash-Lite TTS (Google 차세대 AI 음성 - 추천)</option>
-            <option value="gemini-3.8-flash-tts">Gemini 3.8 Flash TTS (스튜디오급 고음질)</option>
-            <option value="browser">브라우저 내장 Web Speech (기본 로컬 음성)</option>
+          <select id="select-or-tts-model" class="form-select">
+            <option value="google/gemini-3.8-flash-lite-tts" selected>⚡ Google: Gemini 3.8 Flash Lite TTS (초고속 추천)</option>
+            <option value="google/gemini-3.8-flash-tts">✨ Google: Gemini 3.8 Flash TTS (고품질 표현력)</option>
+            <option value="elevenlabs/eleven-v4-turbo">🎙️ ElevenLabs: Eleven v4 Turbo (저지연 터보)</option>
           </select>
         </div>
 
-        <div class="form-group" id="group-tts-voice">
+        <div class="form-group">
           <label class="form-label">
-            AI 목소리 (Voice)
-            <span class="form-label-hint">여친 추천: Leda / 남친 추천: Puck</span>
+            음성 목소리 (Voice)
+            <span class="form-label-hint">어린이 눈높이</span>
           </label>
-          <select id="select-tts-voice" class="form-select">
-            <optgroup label="여성 보이스 (히요리 추천)">
-              <option value="Leda" selected>Leda (✨ 밝고 명랑한 10대 여고생 - 강력 추천)</option>
-              <option value="Zephyr">Zephyr (산뜻하고 통통 튀는 보이스)</option>
-              <option value="Aoede">Aoede (자연스럽고 편안한 보이스)</option>
-              <option value="Kore">Kore (차분하고 성숙한 톤)</option>
-            </optgroup>
-            <optgroup label="남성 보이스 (치토세 추천)">
-              <option value="Puck">Puck (✨ 다정하고 든든한 10대 훈남 남친 - 추천)</option>
-              <option value="Fenrir">Fenrir (차분하고 듬직한 중저음 보이스)</option>
-              <option value="Charon">Charon (깊고 감미로운 매력적인 보이스)</option>
-            </optgroup>
+          <select id="input-or-tts-voice" class="form-select">
+            <option value="Leda" selected>Leda (👧 어리고 부드러운 목소리 - 추천)</option>
+            <option value="Zephyr">Zephyr (밝고 상냥한 목소리)</option>
+            <option value="Aoede">Aoede (자연스럽고 부드러운 목소리)</option>
+            <option value="Puck">Puck (장난꾸러기 귀여운 목소리)</option>
+            <option value="Kore">Kore (차분하고 다정한 목소리)</option>
+            <option value="Fenrir">Fenrir (듬직하고 씩씩한 목소리)</option>
           </select>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn-modal secondary" id="btn-test-or-voice" style="padding: 7px 14px; font-size: 13px;">
+              🔊 음성 테스트 (1초 미리듣기)
+            </button>
+            <div id="or-test-status" style="font-size: 12px; color: var(--text-secondary);"></div>
+          </div>
         </div>
 
         <div class="api-test-status" id="api-test-status-box"></div>
@@ -287,7 +275,7 @@
 
       <div class="modal-footer">
         <button type="button" class="btn-modal secondary" id="btn-test-api">
-          ⚡ 연결 테스트
+          ⚡ 대화 연결 테스트
         </button>
         <button type="button" class="btn-modal primary" id="btn-save-api">
           저장하기
@@ -301,14 +289,14 @@
     <div class="modal-box" style="max-width: 580px;">
       <div class="modal-header">
         <div class="modal-title">
-          <span>👥</span> Live2D 캐릭터 선택
+          <span>👥</span> Live2D 친구들 선택
         </div>
         <button class="btn-modal-close" data-close="modal-char-select">✕</button>
       </div>
 
       <div class="modal-content">
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
-          함께 대화하고 싶은 Live2D 캐릭터를 선택하세요. 표정과 모션, 음성이 실시간으로 변경됩니다.
+          함께 대화하고 싶은 친구를 선택하세요. 표정과 모션, 음성이 실시간으로 변경됩니다.
         </p>
         <div class="char-grid" id="char-cards-container">
           <!-- Dynamic Character Cards -->
@@ -326,14 +314,14 @@
     <div class="modal-box">
       <div class="modal-header">
         <div class="modal-title">
-          <span>🎁</span> 마음을 담은 선물하기
+          <span>🎁</span> 단짝 친구 선물하기
         </div>
         <button class="btn-modal-close" data-close="modal-gift-shop">✕</button>
       </div>
 
       <div class="modal-content">
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">
-          선물을 전하면 호감도가 껑충 올라가고, 히요리의 특별하고 설레는 감동 리액션을 볼 수 있어요!
+          맛있는 간식이나 예쁜 선물을 건네면 우정 점수가 올라가고, 즌다몬의 귀여운 리액션을 볼 수 있어요!
         </p>
         <div class="gift-grid" id="gift-cards-container">
           <!-- Dynamic Gift Cards -->

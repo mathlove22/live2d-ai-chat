@@ -1,65 +1,58 @@
-# 🌸 Sweet Live2D AI Chat (히요리 & 치토세 AI 채팅 웹앱)
+# 🌱 초등 2학년 단짝 친구 즌다몬 (Zundamon AI Chat)
 
-Live2D 인터랙티브 캐릭터와 Google **Gemini 3.5 Flash-Lite** & **Gemini 3.8 Flash-Lite TTS**를 결합한 가상 연인 대화 웹 애플리케이션입니다.
+공식 Live2D **즌다몬(ずんだもん)** 인터랙티브 캐릭터와 Google **Gemini 3.5 Flash** & **Gemini Flash TTS**를 결합하여 초등학교 2학년 어린이 눈높이에 맞춘 다정하고 안전한 AI 단짝 친구 웹 애플리케이션입니다.
 
 ---
 
-## ✨ 주요 기능
+## ✨ 주요 특징 및 맞춤 기능
 
-- 🎭 **Live2D 다중 캐릭터 지원**:
-  - **모모세 히요리 (Momose Hiyori)**: 밝고 명랑한 10대 여고생 소꿉친구 여친
-  - **치토세 (Chitose)**: 츤데레 매력의 19세 다정하고 든든한 소꿉친구 남친
-- 💬 **자연스러운 구어체 AI 대화**:
-  - Google Gemini 3.5 Flash-Lite 기반의 맞춤형 페르소나 시스템 프롬프트 탑재
-  - API 키가 없어도 바로 즐길 수 있는 고품질 로컬 시뮬레이션 모드 지원
-- 🔊 **차세대 AI 음성 (TTS) & 실시간 립싱크**:
-  - Google Gemini 3.8 Flash-Lite TTS 연동 (여성: Leda, 남성: Puck)
-  - Web Audio AnalyserNode 기반의 실시간 음성 주파수 분석을 통한 입 모양 동기화
-- 💖 **호감도 및 인터랙티브 시스템**:
-  - 실시간 스킨십 (머리 쓰다듬기, 볼 꼬집기, 사랑 고백) 및 감정 리액션
-  - 5종류의 선물하기 (바닐라 라떼, 조각 케이크, 꽃다발, 곰인형, 커플링) 및 캐릭터별 특별 대사
-  - 캔버스 하트 파티클 이펙트
-- 📱 **반응형 UI & 뷰 모드 전환**:
-  - 데스크톱/태블릿/모바일 지원
-  - 캐릭터 뷰 / 메신저 뷰 / 분할 뷰 모드 지원
+- 🧚 **초등 2학년 맞춤형 즌다몬 페르소나**:
+  - 초등학교 2학년(8~9세) 어린이 눈높이에 꼭 맞춘 따뜻하고 친근한 반말 구어체 ("안녕!", "진짜루?", "우와 대박!", "헤헤", "신난다!").
+  - 즌다몬 특유의 사랑스러운 말투("~인 거시다!")가 자연스럽게 섞여 귀여움 배가.
+  - 100% 안전하고 긍정적인 대화: 어린이 정서에 유해하거나 어려운 어휘 배제, 자존감을 높여주는 따뜻한 칭찬과 공감.
+- 🔤 **자연스러운 기초 영단어 지도**:
+  - 일상 대화 속에서 초등학교 1~2학년 필수 기초 영단어(과일, 동물, 가족, 감정, 학교, 색깔 등)를 재미있게 지도.
+  - 알파벳 철자와 한글 발음, 뜻, 재미있는 예시를 함께 제시:
+    > "사과는 영어로 **Apple(애플)**이라고 해! 에이-피-피-엘-이! 아삭아삭 달콤한 애플~ 너도 소리 내서 '애플!' 하고 따라 해봐! [emotion:english]"
+  - 신나는 영단어 퀴즈 모드 지원.
+- 🎭 **Live2D 즌다몬 실시간 애니메이션**:
+  - 화면 터치 인터랙션: 머리 쓰다듬기, 볼 만지기, 손잡기/사랑 고백에 맞춘 생동감 넘치는 반응.
+  - 완두콩 귀 쫑긋거림 및 다양한 표정 변화(신남, 감동, 수줍음, 뾰로통, 영어 척척박사 등).
+- 🔊 **Google Gemini 3.8 / Flash TTS & 실시간 립싱크**:
+  - Vercel 서버리스 프록시 환경 변수를 통해 안전한 API Key 관리 지원.
+  - OpenRouter Google Gemini Flash TTS (`gemini-3.8-flash-lite-tts` / `Leda`) 기반의 밝고 맑은 단일 음성.
+  - Web Audio AnalyserNode 기반의 실시간 음성 주파수 분석을 통해 즌다몬 입 모양(ParamMouthOpenY) 동기화.
+- 🍡 **어린이 맞춤 선물 & 우정 레벨 시스템**:
+  - 달콤한 즌다모찌, 무지개 롤리팝 사탕, 반짝이 스티커북, 알록달록 색연필, 아기 곰인형, 비밀 보물상자 선물하기.
+  - Lv.1 쑥스러운 짝꿍부터 Lv.5 영원한 비밀친구까지 우정 점수 성장 시스템.
 
 ---
 
 ## 🛠️ 기술 스택
 
-- **Frontend**: HTML5, Vanilla JavaScript (ES Module), CSS3 (Modern Glassmorphism Design)
-- **Live2D Runtime**: PixiJS v6, pixi-live2d-display (Cubism 4 Core SDK)
-- **Build Tool**: Vite
+- **Frontend**: HTML5, Vanilla JavaScript (ES Module), CSS3 (Mint/Zunda Theme)
+- **Live2D Engine**: PixiJS v6, pixi-live2d-display (Cubism 4 Core SDK)
 - **AI Models**:
-  - LLM: `gemini-3.5-flash-lite` (또는 사용자 정의 Gemini 모델)
-  - TTS: `gemini-3.8-flash-lite-tts` (음성 스타일 프롬프트 제어)
+  - LLM: `google/gemini-3.8-flash` (초등학생 눈높이 언어 및 영어 교육 프롬프트)
+  - TTS: `google/gemini-3.8-flash-lite-tts` (Voice: `Leda`)
+- **Serverless Backend**: Vercel Edge Functions (`/api/chat`, `/api/tts`, `/api/check`)
+- **Build Tool**: Vite
 
 ---
 
-## 🚀 로컬 실행 방법
+## 🚀 실행 방법
 
 ```bash
-# 1. 의존성 설치
-npm install
-
-# 2. 로컬 개발 서버 실행
+# 로컬 개발 서버 실행
 npm run dev
 
-# 3. 브라우저에서 접속
+# 브라우저에서 접속
 # http://localhost:5173
 ```
 
 ---
 
-## 🔑 Gemini API 설정
-
-1. [Google AI Studio](https://aistudio.google.com/)에서 무료 Gemini API Key를 발급받습니다.
-2. 웹앱 우측 상단 또는 좌측 하단의 **⚙️ API 설정** 아이콘을 클릭합니다.
-3. 발급받은 API 키를 입력하고 **저장하기**를 누르면 끝! (브라우저 로컬 저장소에만 안전하게 보관됩니다)
-
----
-
 ## 📄 라이선스 및 리소스 출처
 
-- 본 프로젝트의 Live2D 모델 데이터는 [Live2D Cubism 공식 샘플 모델](https://www.live2d.com/ko/learn/sample/)을 기반으로 제작되었습니다.
-- 모델 저작권은 (주)Live2D에 있습니다.
+- 즌다몬 Live2D 모델은 [Live2D Cubism 공식 샘플 모델 (東北ずん子・ずんだもんプロジェクト)](https://www.live2d.com/ko/learn/sample/zundamon/)을 기반으로 제작되었습니다.
+- 캐릭터 저작권은 SSS LLC. (東北ずん子・ずんだもんプロジェクト)에 있습니다.

@@ -1,16 +1,11 @@
-/**
- * Google Gemini API Client
- * Configured for Gemini Flash Lite models (e.g. gemini-2.5-flash-lite / gemini-3.5-flash-lite)
- */
+import { storage } from './storage.js';
 
-export const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
+export const DEFAULT_MODEL = 'google/gemini-3.8-flash';
 
 export const SUPPORTED_MODELS = [
-  { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite (초고속/경량 권장)' },
-  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite' },
-  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash-Lite' },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
-  { id: 'custom', name: '직접 모델명 입력' }
+  { id: 'google/gemini-3.8-flash', name: '✨ Google: Gemini 3.8 Flash (최신 모델 - 추천)' },
+  { id: 'google/gemini-3.5-flash', name: 'Google: Gemini 3.5 Flash' },
+  { id: 'google/gemini-2.5-flash', name: 'Google: Gemini 2.5 Flash' }
 ];
 
 /**
@@ -20,41 +15,40 @@ export function parseEmotionAndText(rawText) {
   if (!rawText) return { text: '', emotion: 'neutral' };
 
   let emotion = 'neutral';
-  // Regex to catch [emotion:xxx] or [emotion: xxx]
   const tagMatch = rawText.match(/\[emotion:\s*([a-zA-Z가-힣_]+)\]/i);
 
   if (tagMatch) {
     emotion = tagMatch[1].toLowerCase();
-    // Normalize aliases
     if (emotion === 'blush') emotion = 'shy';
     if (emotion === 'worried') emotion = 'sad';
     if (emotion === 'excited') emotion = 'happy';
     if (emotion === 'tsundere') emotion = 'pout';
     if (emotion === 'cheer') emotion = 'happy';
     if (emotion === 'playful') emotion = 'wink';
+    if (emotion === 'english' || emotion === 'study' || emotion === 'teach') emotion = 'english';
   } else {
-    // Fallback: simple heuristic sentiment analysis for Korean
     const lower = rawText.toLowerCase();
-    if (lower.includes('사랑') || lower.includes('좋아') || lower.includes('두근') || lower.includes('심쿵')) {
+    if (lower.includes('영어로') || lower.includes('영단어') || lower.includes('알파벳') || lower.includes('apple') || lower.includes('school')) {
+      emotion = 'english';
+    } else if (lower.includes('사랑') || lower.includes('좋아') || lower.includes('단짝') || lower.includes('친구 최고')) {
       emotion = 'love';
-    } else if (lower.includes('부끄') || lower.includes('빨개') || lower.includes('쑥스')) {
+    } else if (lower.includes('부끄') || lower.includes('빨개') || lower.includes('쑥스') || lower.includes('에헤헤')) {
       emotion = 'shy';
     } else if (lower.includes('흥') || lower.includes('삐') || lower.includes('바보') || lower.includes('토라')) {
       emotion = 'pout';
-    } else if (lower.includes('깜짝') || lower.includes('놀랐') || lower.includes('대박') || lower.includes('헉')) {
+    } else if (lower.includes('깜짝') || lower.includes('놀랐') || lower.includes('대박') || lower.includes('우와')) {
       emotion = 'surprised';
-    } else if (lower.includes('슬퍼') || lower.includes('힘들') || lower.includes('울') || lower.includes('우울')) {
+    } else if (lower.includes('슬퍼') || lower.includes('힘들') || lower.includes('울') || lower.includes('속상')) {
       emotion = 'sad';
     } else if (lower.includes('윙크') || lower.includes('장난') || lower.includes('메롱')) {
       emotion = 'wink';
-    } else if (lower.includes('고민') || lower.includes('생각') || lower.includes('글쎄')) {
+    } else if (lower.includes('고민') || lower.includes('생각') || lower.includes('글쎄') || lower.includes('퀴즈')) {
       emotion = 'thinking';
-    } else if (lower.includes('행복') || lower.includes('기뻐') || lower.includes('헤헤') || lower.includes('ㅎㅎ')) {
+    } else if (lower.includes('행복') || lower.includes('기뻐') || lower.includes('신나') || lower.includes('헤헤') || lower.includes('ㅎㅎ')) {
       emotion = 'happy';
     }
   }
 
-  // Remove the tag from the user-facing text
   const cleanText = rawText.replace(/\[emotion:\s*[a-zA-Z가-힣_]+\]/gi, '').trim();
 
   return {
@@ -64,97 +58,126 @@ export function parseEmotionAndText(rawText) {
 }
 
 /**
- * Test API key connectivity
+ * Test API key connectivity via OpenRouter or Serverless Proxy
  */
 export async function testConnection(apiKey, model = DEFAULT_MODEL) {
-  if (!apiKey || !apiKey.trim()) {
-    throw new Error('API 키가 입력되지 않았습니다.');
+  const key = (apiKey && apiKey.trim()) || storage.getOpenRouterKey();
+
+  // If no client key provided, check if server proxy has an environment key configured
+  if (!key) {
+    try {
+      const checkRes = await fetch('/api/check');
+      if (checkRes.ok) {
+        const data = await checkRes.json();
+        if (data.configured) {
+          return { success: true, text: 'Vercel 서버 환경 변수(OPENROUTER_API_KEY) 연결이 확인되었습니다!' };
+        }
+      }
+    } catch (_) {}
   }
 
-  const cleanModel = (model || DEFAULT_MODEL).trim();
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
-  
+  let cleanModel = (model || DEFAULT_MODEL).trim();
+  if (!cleanModel.includes('/')) cleanModel = `google/${cleanModel}`;
+
+  const endpoint = key ? 'https://openrouter.ai/api/v1/chat/completions' : '/api/chat';
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) {
+    headers['Authorization'] = `Bearer ${key.trim()}`;
+    headers['HTTP-Referer'] = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+    headers['X-Title'] = 'Zundamon AI Friend';
+  }
+
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: '테스트 연결 확인: "OK" 라고 한 단어로만 답해줘.' }]
-        }
-      ],
-      generationConfig: { maxOutputTokens: 20 }
+      model: cleanModel,
+      messages: [{ role: 'user', content: '테스트 연결 확인: "OK" 라고 한 단어로만 답해줘.' }],
+      max_tokens: 15
     })
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const message = errorData.error?.message || `HTTP 오류 (${response.status} ${response.statusText})`;
-    throw new Error(message);
+    throw new Error(errorData.error?.message || errorData.error || `HTTP 오류 (${response.status})`);
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = data.choices?.[0]?.message?.content || 'OK';
   return { success: true, text };
 }
 
 /**
- * Stream or call Gemini API for girlfriend chat
+ * Stream OpenRouter chat completions for friend chat (via /api/chat serverless proxy or direct key)
  */
 export async function callGeminiStream({ apiKey, model, messages, systemPrompt, onChunk }) {
-  if (!apiKey || !apiKey.trim()) {
-    throw new Error('NO_API_KEY');
+  const key = (apiKey && apiKey.trim()) || storage.getOpenRouterKey();
+
+  let cleanModel = (model || DEFAULT_MODEL).trim();
+  if (!cleanModel.includes('/')) cleanModel = `google/${cleanModel}`;
+
+  const formattedMessages = [];
+  if (systemPrompt) {
+    formattedMessages.push({ role: 'system', content: systemPrompt });
   }
 
-  const cleanModel = (model || DEFAULT_MODEL).trim();
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey.trim())}`;
-
-  // Format messages for Gemini API
-  const formattedContents = [];
   const recentMessages = messages.slice(-14);
-
   for (const m of recentMessages) {
-    if (m.role === 'user' || m.role === 'model') {
-      formattedContents.push({
-        role: m.role,
-        parts: [{ text: m.text }]
-      });
-    }
+    if (!m || (m.role !== 'user' && m.role !== 'model' && m.role !== 'assistant')) continue;
+    const cleanText = (m.text || '').replace(/\[emotion:[^\]]+\]/gi, '').trim();
+    if (!cleanText) continue;
+    const role = (m.role === 'model' || m.role === 'assistant') ? 'assistant' : 'user';
+    formattedMessages.push({ role, content: cleanText });
   }
 
-  if (formattedContents.length === 0 || formattedContents[formattedContents.length - 1].role !== 'user') {
-    formattedContents.push({
-      role: 'user',
-      parts: [{ text: '안녕!' }]
+  if (formattedMessages.length === 0 || formattedMessages[formattedMessages.length - 1].role !== 'user') {
+    formattedMessages.push({ role: 'user', content: '안녕!' });
+  }
+
+  // Use /api/chat serverless proxy by default, or fallback to direct OpenRouter if client key is explicitly passed
+  let endpoint = '/api/chat';
+  let headers = {
+    'Content-Type': 'application/json'
+  };
+  if (key) {
+    headers['x-user-key'] = key.trim();
+  }
+
+  let response = await fetch(endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: cleanModel,
+      stream: true,
+      messages: formattedMessages,
+      temperature: 0.85
+    })
+  }).catch(() => null);
+
+  // If server proxy returned 404 and user has a direct key, fall back to direct OpenRouter
+  if ((!response || response.status === 404) && key) {
+    endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+    headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key.trim()}`,
+      'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173',
+      'X-Title': 'Zundamon AI Friend'
+    };
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: cleanModel,
+        stream: true,
+        messages: formattedMessages,
+        temperature: 0.85
+      })
     });
   }
 
-  const payload = {
-    contents: formattedContents,
-    generationConfig: {
-      temperature: 0.88,
-      topP: 0.95,
-      maxOutputTokens: 1000
-    }
-  };
-
-  if (systemPrompt) {
-    payload.systemInstruction = {
-      parts: [{ text: systemPrompt }]
-    };
-  }
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errMessage = errorData.error?.message || `HTTP ${response.status} ${response.statusText}`;
-    throw new Error(errMessage);
+  if (!response || !response.ok) {
+    const errorData = response ? await response.json().catch(() => ({})) : {};
+    throw new Error(errorData.error?.message || errorData.error || `HTTP ${response ? response.status : '오류'}`);
   }
 
   const reader = response.body.getReader();
@@ -168,18 +191,17 @@ export async function callGeminiStream({ apiKey, model, messages, systemPrompt, 
 
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split('\n');
-    buffer = lines.pop(); // Retain incomplete line
+    buffer = lines.pop();
 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || !trimmed.startsWith('data: ')) continue;
-
       const jsonStr = trimmed.slice(6).trim();
       if (!jsonStr || jsonStr === '[DONE]') continue;
 
       try {
         const parsed = JSON.parse(jsonStr);
-        const chunkText = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const chunkText = parsed.choices?.[0]?.delta?.content || '';
         if (chunkText) {
           fullAccumulatedText += chunkText;
           if (onChunk) onChunk(chunkText, fullAccumulatedText);
